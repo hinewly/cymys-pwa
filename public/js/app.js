@@ -4,7 +4,7 @@
  * 业务规则与小程序版一致：每题型免费 15 题，答对记完成
  */
 
-const APP_VERSION = 'v0.1.8';
+const APP_VERSION = 'v0.1.9';
 const FREE_LIMIT = 15;
 const STORE_KEYS = {
   COMPLETED: 'cymys_completedQuestions',
@@ -251,17 +251,12 @@ function handleAnswer(slot) {
     const q = questionsByType(type).find(x => x.id === qid);
     const done = completedCount(type);
     const total = questionsByType(type).length;
-    const isLast = idx >= total - 1;
 
+    // 底部导航栏已有"下一题"，结果卡不再重复放按钮
     resultBox.innerHTML = `
       <div class="result correct">
-        <div class="result-icon">✓</div>
-        <p class="result-text">✅ 回答正确！（${done}/${total}）</p>
+        <p class="result-text">✅ 回答正确！（${done}/${total}）${idx >= total - 1 ? '　本题型全部完成 🎉' : ''}</p>
         ${q.explanation ? `<div class="explanation"><b>答题思路：</b>${esc(q.explanation)}</div>` : ''}
-        <button class="btn-start" data-action="${isLast ? 'nav' : 'navq'}" data-type="${type}"
-                data-index="${idx + 2}" data-to="#/home">
-          ${isLast ? '本题型已全部完成，返回' : '下一题 →'}
-        </button>
       </div>`;
     page.querySelectorAll('.option-btn').forEach(b => { b.disabled = true; b.classList.remove('wrong'); });
     const rightBtn = page.querySelector(`.option-btn[data-slot="${page.dataset.correct}"]`);
