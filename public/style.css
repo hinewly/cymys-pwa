@@ -15,7 +15,8 @@
 html, body { height: 100%; }
 body {
   font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
-  background: var(--bg);
+  background: linear-gradient(175deg, #f6f4ee 0%, #efece3 100%);
+  background-attachment: fixed;
   color: var(--text);
   max-width: 480px;
   margin: 0 auto;
@@ -71,7 +72,7 @@ body {
 
 /* 答题页 */
 .q-desc { font-size: 14px; color: #555; margin-bottom: 14px; }
-.tiles { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 16px;
+.tiles { background: #fcfbf8; border-radius: 14px; padding: 14px; margin-bottom: 16px;
   display: flex; flex-direction: column; gap: 10px; align-items: center;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
 .tile-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
@@ -80,20 +81,20 @@ body {
 .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .option-btn {
   position: relative; border: 2px solid #e5e2da; border-radius: 12px; background: var(--card);
-  padding: 12px 0 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 8% 6% 4%; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
 .option-btn:active { border-color: var(--green-light); }
 .option-btn:disabled { cursor: default; }
 .option-btn.wrong { border-color: var(--red); opacity: .55; }
 .option-btn.right { border-color: var(--green-light); background: #f0f9f2; }
-.option-img { width: 52px; height: 72px; border-radius: 5px; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+.option-img { width: 78%; height: auto; aspect-ratio: 44 / 61; border-radius: 5px; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
 .option-label { font-size: 12px; color: var(--muted); }
 
 /* 结果区 */
 .answer-result { margin-top: 16px; }
 .result { text-align: center; padding: 16px; border-radius: 14px; background: var(--card);
   box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-.result.correct { border: 1px solid #cde8d4; }
+.result.correct { border: 1px solid #c2e0ca; background: #f2f8f3; }
 .result-icon { width: 44px; height: 44px; line-height: 44px; margin: 0 auto 8px;
   border-radius: 50%; background: var(--green-light); color: #fff; font-size: 22px; }
 .result-text { font-weight: 600; margin-bottom: 10px; }
@@ -143,7 +144,7 @@ body {
 /* 手机横屏 / 小平板：放宽内容列，牌面放大 */
 @media (min-width: 520px) {
   .tile-img { width: 52px; height: 72px; }
-  .option-img { width: 60px; height: 83px; }
+  
   .page { padding: 20px 24px; }
 }
 
@@ -170,7 +171,7 @@ body {
   .tiles { padding: 20px; }
   .tile-img { width: 58px; height: 80px; }
   .options { grid-template-columns: repeat(4, 1fr); gap: 14px; }
-  .option-img { width: 64px; height: 88px; }
+  
   .q-desc { font-size: 15px; }
 
   /* 统计与个人卡更舒展 */
@@ -191,7 +192,7 @@ body {
   .page { padding: 12px; }
   .tile-img { width: 38px; height: 53px; }
   .options { gap: 8px; }
-  .option-img { width: 46px; height: 64px; }
+  
 }
 
 /* 上一题/下一题导航 */
@@ -211,8 +212,7 @@ body {
 
 /* 答题页垂直分布：内容不满屏时均匀撑开，消除大片底部空白 */
 .q-flow {
-  display: flex; flex-direction: column;
-  min-height: calc(100dvh - 120px);
+  display: flex; flex-direction: column; justify-content: center;
+  min-height: calc(100dvh - 140px);
 }
-.q-flow .tiles { flex-shrink: 0; }
-.q-flow .q-nav { margin-top: auto; padding-top: 22px; }
+.q-flow .q-nav { margin-top: 26px; }

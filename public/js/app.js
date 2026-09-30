@@ -4,7 +4,7 @@
  * 业务规则与小程序版一致：每题型免费 15 题，答对记完成
  */
 
-const APP_VERSION = 'v0.1.3';
+const APP_VERSION = 'v0.1.4';
 const FREE_LIMIT = 15;
 const STORE_KEYS = {
   COMPLETED: 'cymys_completedQuestions',
@@ -260,7 +260,7 @@ function handleAnswer(slot) {
           ${isLast ? '本题型已全部完成，返回' : '下一题 →'}
         </button>
       </div>`;
-    page.querySelectorAll('.option-btn').forEach(b => { b.disabled = true; });
+    page.querySelectorAll('.option-btn').forEach(b => { b.disabled = true; b.classList.remove('wrong'); });
     const rightBtn = page.querySelector(`.option-btn[data-slot="${page.dataset.correct}"]`);
     if (rightBtn) rightBtn.classList.add('right');
   } else {
