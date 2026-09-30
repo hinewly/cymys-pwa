@@ -4,7 +4,7 @@
  * 业务规则与小程序版一致：每题型免费 15 题，答对记完成
  */
 
-const APP_VERSION = 'v0.1.5';
+const APP_VERSION = 'v0.1.6';
 const FREE_LIMIT = 15;
 const STORE_KEYS = {
   COMPLETED: 'cymys_completedQuestions',
@@ -267,8 +267,10 @@ function handleAnswer(slot) {
     const rightBtn = page.querySelector(`.option-btn[data-slot="${page.dataset.correct}"]`);
     if (rightBtn) rightBtn.classList.add('right');
   } else {
+    // 单选语义：清掉旧红框，只标最新选错的那个；不锁死按钮，可继续换选
+    page.querySelectorAll('.option-btn').forEach(b => b.classList.remove('wrong'));
     const btn = page.querySelector(`.option-btn[data-slot="${slot}"]`);
-    if (btn) { btn.classList.add('wrong'); btn.disabled = true; }
+    if (btn) btn.classList.add('wrong');
     resultBox.innerHTML = `<div class="result wrong"><p class="result-text">不对，再想想～</p></div>`;
   }
 }
