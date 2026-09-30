@@ -4,7 +4,7 @@
  * 业务规则与小程序版一致：每题型免费 15 题，答对记完成
  */
 
-const APP_VERSION = 'v0.1.7';
+const APP_VERSION = 'v0.1.8';
 const FREE_LIMIT = 15;
 const STORE_KEYS = {
   COMPLETED: 'cymys_completedQuestions',
@@ -256,7 +256,7 @@ function handleAnswer(slot) {
     resultBox.innerHTML = `
       <div class="result correct">
         <div class="result-icon">✓</div>
-        <p class="result-text">回答正确！（${done}/${total}）</p>
+        <p class="result-text">✅ 回答正确！（${done}/${total}）</p>
         ${q.explanation ? `<div class="explanation"><b>答题思路：</b>${esc(q.explanation)}</div>` : ''}
         <button class="btn-start" data-action="${isLast ? 'nav' : 'navq'}" data-type="${type}"
                 data-index="${idx + 2}" data-to="#/home">
