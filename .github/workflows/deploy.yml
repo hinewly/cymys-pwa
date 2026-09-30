@@ -35,15 +35,15 @@ jobs:
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
 
           # 1. Bump CACHE_VERSION in service-worker.js
-          CURRENT_CACHE=$(grep -oE "CACHE_VERSION = '[^']+'" public/service-worker.js | grep -oE "'[^']+'" | tr -d "'")
+          CURRENT_CACHE=$(grep -oE "CACHE_VERSION = '[^']+'" public/sw.js | grep -oE "'[^']+'" | tr -d "'")
           NEW_CACHE="v${CURRENT_CACHE##*v}-${SHORT_SHA}"
-          sed -i "s/CACHE_VERSION = '${CURRENT_CACHE}'/CACHE_VERSION = '${NEW_CACHE}'/" public/service-worker.js
+          sed -i "s/CACHE_VERSION = '${CURRENT_CACHE}'/CACHE_VERSION = '${NEW_CACHE}'/" public/sw.js
           echo "CACHE: ${CURRENT_CACHE} → ${NEW_CACHE}"
 
           # 2. Bump APP_VERSION in app.js
-          CURRENT_APP=$(grep -oE "APP_VERSION = '[^']+'" public/app.js | grep -oE "'[^']+'" | tr -d "'")
+          CURRENT_APP=$(grep -oE "APP_VERSION = '[^']+'" public/js/app.js | grep -oE "'[^']+'" | tr -d "'")
           NEW_APP="${CURRENT_APP}-${SHORT_SHA}"
-          sed -i "s/APP_VERSION = '${CURRENT_APP}'/APP_VERSION = '${NEW_APP}'/" public/app.js
+          sed -i "s/APP_VERSION = '${CURRENT_APP}'/APP_VERSION = '${NEW_APP}'/" public/js/app.js
           echo "APP: ${CURRENT_APP} → ${NEW_APP}"
 
       - name: Sync changelog
