@@ -216,3 +216,10 @@ body {
   min-height: calc(100dvh - 140px);
 }
 .q-flow .q-nav { margin-top: 26px; }
+
+/* 首页版本号徽标 */
+.home-head { display: flex; justify-content: space-between; align-items: flex-start; }
+.home-head .ver {
+  font-size: 11px; color: var(--muted); background: rgba(0,0,0,0.06);
+  padding: 3px 9px; border-radius: 10px; white-space: nowrap; margin-top: 4px;
+}

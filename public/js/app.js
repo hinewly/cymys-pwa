@@ -4,7 +4,7 @@
  * 业务规则与小程序版一致：每题型免费 15 题，答对记完成
  */
 
-const APP_VERSION = 'v0.1.4';
+const APP_VERSION = 'v0.1.5';
 const FREE_LIMIT = 15;
 const STORE_KEYS = {
   COMPLETED: 'cymys_completedQuestions',
@@ -140,9 +140,12 @@ function renderHome() {
 
   $view.innerHTML = `
     <div class="page">
-      <header class="page-header">
-        <h1>拆搭闯关</h1>
-        <p class="subtitle">精选拆搭训练，提高川麻技巧</p>
+      <header class="page-header home-head">
+        <div>
+          <h1>拆搭闯关</h1>
+          <p class="subtitle">精选拆搭训练，提高川麻技巧</p>
+        </div>
+        <span class="ver">${APP_VERSION}</span>
       </header>
       ${freeTip}
       <div class="cards">${cards}</div>

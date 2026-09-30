@@ -1,0 +1,13 @@
+name = "cymys-pwa"
+main = "src/index.js"
+compatibility_date = "2024-09-01"
+
+# 绑定域名（部署时自动配置 DNS 和证书）
+# 子域名最终名字可改（如 majiang.daobox.app），改这里重新 deploy 即可
+routes = [
+  { pattern = "cymys.daobox.app", custom_domain = true }
+]
+
+# 前端静态资源（public/）由 Worker 直接托管 → cymys.daobox.app 就是完整站点
+[assets]
+directory = "../public"
