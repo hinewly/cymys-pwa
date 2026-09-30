@@ -90,20 +90,26 @@ body {
 }
 .option-btn { width: clamp(92px, 24vw, 132px); flex: 0 0 auto; }
 .option-btn {
-  position: relative; border: none; background: transparent;
-  padding: 0; border-radius: 12px; overflow: hidden; cursor: pointer;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.16), 0 1px 3px rgba(0,0,0,0.12);
-  transition: transform .08s;
+  position: relative; border-radius: 12px; overflow: hidden; cursor: pointer;
+  /* 象牙白材质：微渐变 + 细边，替代死白 */
+  background: linear-gradient(160deg, #fffef9 0%, #f7f0de 100%);
+  border: 1px solid #d9d0bc;
+  box-shadow: 0 4px 10px rgba(70, 58, 32, 0.16), 0 1px 2px rgba(0,0,0,0.10);
+  transition: transform .1s, box-shadow .1s;
 }
-.option-btn:active { transform: scale(.96); }
+.option-btn:not(:disabled):hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(70,58,32,0.22); }
+.option-btn:active { transform: translateY(-1px) scale(.98); }
 .option-btn:disabled { cursor: default; }
-/* 用 outline 标记状态，不挤占布局 */
-.option-btn.wrong { outline: 3px solid var(--red); outline-offset: -3px; opacity: .5; }
+/* 状态用 outline，不挤布局 */
+.option-btn.wrong { outline: 3px solid var(--red); outline-offset: -3px; opacity: .45; }
 .option-btn.right { outline: 3px solid var(--green-light); outline-offset: -3px; }
 .option-img {
   width: 100%; display: block; height: auto; aspect-ratio: 44 / 61;
-  border-radius: 12px; box-shadow: none;
+  /* 白底 JPG 融进象牙渐变底，白块感消失 */
+  mix-blend-mode: multiply;
 }
+/* 尺寸：手机四张一排等宽，桌面限宽居中 */
+.option-btn { width: calc((100% - 36px) / 4); max-width: 118px; }
 .option-label {
   position: absolute; top: 7px; left: 7px;
   width: 24px; height: 24px; line-height: 24px; text-align: center;
@@ -114,9 +120,12 @@ body {
 
 /* 结果区 */
 .answer-result { margin-top: 12px; }
-.result { text-align: center; padding: 12px 14px; border-radius: 12px; background: var(--card);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-.result.correct { border: 1px solid #c2e0ca; background: #f2f8f3; }
+.result { text-align: center; padding: 12px 14px; border-radius: 12px;
+  background: linear-gradient(160deg, #fdfcf7 0%, #f6f1e3 100%);
+  border: 1px solid #e6ddc8;
+  box-shadow: 0 2px 10px rgba(70,58,32,0.08); }
+.result.correct { border-color: #c4dfc9; background: linear-gradient(160deg, #f6fbf4 0%, #eaf4e8 100%); }
+.result.wrong { border-color: #ecd2cf; background: linear-gradient(160deg, #fdf5f4 0%, #f9ecea 100%); }
 .result-icon { display: none; }  /* 紧凑模式：去掉大圆图标 */
 .result-text { font-weight: 600; margin-bottom: 8px; font-size: 14px; }
 .explanation { text-align: left; font-size: 12px; color: #555; background: #f5f3ec;
