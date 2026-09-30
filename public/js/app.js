@@ -4,7 +4,7 @@
  * 业务规则与小程序版一致：每题型免费 15 题，答对记完成
  */
 
-const APP_VERSION = 'v0.1.2';
+const APP_VERSION = 'v0.1.3';
 const FREE_LIMIT = 15;
 const STORE_KEYS = {
   COMPLETED: 'cymys_completedQuestions',
@@ -76,9 +76,6 @@ function getDeviceId() {
   }
   return id;
 }
-
-// ---------- 跳过状态（答题中点"跳过"时前移，不记完成） ----------
-const skipState = { basic: 0, error_prone: 0 };
 
 // ---------- 视图渲染工具 ----------
 
@@ -154,12 +151,24 @@ function renderHome() {
 
 // ---------- 页面：答题 ----------
 
-function renderQuestion(type) {
+function renderQuestion(type, indexParam) {
   const qs = questionsByType(type);
   const activated = isActivated();
 
-  // 免费额度：未激活且该题型已完成满 15 题 → 拦截
-  if (!activated && completedCount(type) >= FREE_LIMIT) {
+  // 定位当前题：无参数 → 第一道未完成（全完成则第 1 题）
+  let index;
+  if (indexParam) {
+    // hash 参数是 1-based 题号 → 内部 0-based 下标
+    index = Math.min(Math.max((parseInt(indexParam, 10) || 1) - 1, 0), qs.length - 1);
+  } else {
+    const firstUn = qs.findIndex(q => !isCompleted(q.id));
+    index = firstUn === -1 ? 0 : firstUn;
+  }
+  const current = qs[index];
+  const done = isCompleted(current.id);
+
+  // 免费额度：未激活且已答满 15 题，不能再答新题（已完成的题可回看）
+  if (!activated && !done && completedCount(type) >= FREE_LIMIT) {
     $view.innerHTML = `
       <div class="page center">
         <div class="modal-card">
@@ -173,40 +182,54 @@ function renderQuestion(type) {
     return;
   }
 
-  // 当前题：第一道未完成的（按跳过偏移前移）；全完成则从头循环
-  const list = qs.filter(q => !isCompleted(q.id));
-  const pool = list.length ? list : qs;
-  const current = pool[skipState[type] % pool.length];
-  const index = qs.indexOf(current) + 1;
-
   const rows = organizeTileRows(current.tiles).map(row => `
     <div class="tile-row">${row.map(name =>
-      `<img class="tile-img" src="${tileImage(name)}" alt="${esc(name)}" draggable="false">`).join('')}
+      `<img class="tile-img" src="${tileImage(name)}" alt="${esc(name)}" loading="eager" decoding="async" draggable="false">`).join('')}
     </div>`).join('');
 
-  // 选项（跳过空选项，保留原始槽位索引用于判定）
+  // 选项：做过 → 复习模式（高亮正确答案、禁点）；没做 → 可答
   const optionBtns = current.options.map((opt, slot) => {
     if (!opt) return '';
+    const reviewRight = done && slot === current.correctOption ? ' right' : '';
     return `
-      <button class="option-btn" data-action="answer" data-slot="${slot}" data-opt="${esc(opt)}">
-        <img class="option-img" src="${tileImage(opt)}" alt="${esc(opt)}" draggable="false">
+      <button class="option-btn${reviewRight}" data-action="answer" data-slot="${slot}" data-opt="${esc(opt)}" ${done ? 'disabled' : ''}>
+        <img class="option-img" src="${tileImage(opt)}" alt="${esc(opt)}" loading="eager" decoding="async" draggable="false">
         <span class="option-label">${'ABCD'[slot]}</span>
       </button>`;
   }).join('');
 
+  // 上一题/下一题
+  const prevBtn = index > 0
+    ? `<button class="q-nav-btn" data-action="navq" data-type="${type}" data-index="${index}">‹ 上一题</button>`
+    : `<span></span>`;
+  const nextBtn = index < qs.length - 1
+    ? `<button class="q-nav-btn primary" data-action="navq" data-type="${type}" data-index="${index + 2}">下一题 ›</button>`
+    : `<span class="q-nav-end">已是最后一题</span>`;
+
+  // 复习模式直接展示解析
+  const reviewBox = done ? `
+    <div class="answer-result">
+      <div class="result correct">
+        <p class="result-text">✓ 已完成（复习模式）</p>
+        ${current.explanation ? `<div class="explanation"><b>答题思路：</b>${esc(current.explanation)}</div>` : ''}
+      </div>
+    </div>` : '';
+
   $view.innerHTML = `
-    <div class="page" id="question-page" data-type="${type}" data-id="${esc(current.id)}" data-correct="${current.correctOption}">
+    <div class="page q-flow" id="question-page" data-type="${type}" data-id="${esc(current.id)}"
+         data-correct="${current.correctOption}" data-index="${index}">
       <header class="page-header question-header">
         <button class="btn-back" data-action="nav" data-to="#/home">‹ 返回</button>
         <h1>${esc(current.title)}</h1>
-        <span class="q-index">第${index}题</span>
-        <button class="btn-skip" data-action="skip" data-type="${type}">跳过 ›</button>
+        <span class="q-index">第${index + 1}题</span>
       </header>
       <p class="q-desc">${esc(current.description)}</p>
       <div class="tiles">${rows}</div>
       <p class="q-prompt">选择要打出的牌：</p>
       <div class="options">${optionBtns}</div>
+      ${reviewBox}
       <div class="answer-result" id="answer-result"></div>
+      <div class="q-nav">${prevBtn}${nextBtn}</div>
     </div>`;
 }
 
@@ -215,28 +238,31 @@ function handleAnswer(slot) {
   const correct = page.dataset.correct === slot;
   const type = page.dataset.type;
   const qid = page.dataset.id;
+  const idx = parseInt(page.dataset.index, 10);
   const resultBox = document.getElementById('answer-result');
 
   if (navigator.vibrate) navigator.vibrate(correct ? 30 : [60, 40, 60]);
 
   if (correct) {
     completeQuestion(qid);
-    skipState[type] = 0;  // 完成状态变化，跳过偏移归零
     const q = questionsByType(type).find(x => x.id === qid);
     const done = completedCount(type);
     const total = questionsByType(type).length;
-    const next = questionsByType(type).find(x => !isCompleted(x.id));
+    const isLast = idx >= total - 1;
 
     resultBox.innerHTML = `
       <div class="result correct">
         <div class="result-icon">✓</div>
         <p class="result-text">回答正确！（${done}/${total}）</p>
         ${q.explanation ? `<div class="explanation"><b>答题思路：</b>${esc(q.explanation)}</div>` : ''}
-        <button class="btn-start" data-action="${next ? 'next' : 'nav'}" data-type="${type}" data-to="#/home">
-          ${next ? '下一题 →' : '本题型已全部完成，返回'}
+        <button class="btn-start" data-action="${isLast ? 'nav' : 'navq'}" data-type="${type}"
+                data-index="${idx + 2}" data-to="#/home">
+          ${isLast ? '本题型已全部完成，返回' : '下一题 →'}
         </button>
       </div>`;
-    page.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+    page.querySelectorAll('.option-btn').forEach(b => { b.disabled = true; });
+    const rightBtn = page.querySelector(`.option-btn[data-slot="${page.dataset.correct}"]`);
+    if (rightBtn) rightBtn.classList.add('right');
   } else {
     const btn = page.querySelector(`.option-btn[data-slot="${slot}"]`);
     if (btn) { btn.classList.add('wrong'); btn.disabled = true; }
@@ -291,7 +317,9 @@ function router() {
   const hash = location.hash || '#/home';
   window.scrollTo(0, 0);
   if (hash.startsWith('#/question/')) {
-    renderQuestion(hash.split('/')[2] === 'error_prone' ? 'error_prone' : 'basic');
+    const parts = hash.split('/');
+    const type = parts[2] === 'error_prone' ? 'error_prone' : 'basic';
+    renderQuestion(type, parts[3]);
   } else if (hash === '#/profile') {
     renderProfile();
   } else if (hash === '#/activate') {
@@ -320,14 +348,14 @@ document.addEventListener('click', (e) => {
 
   switch (action) {
     case 'start':
-    case 'next':
-      skipState[type] = 0;
       goto(`#/question/${type}`);
       break;
-    case 'skip':
-      skipState[el.dataset.type] = (skipState[el.dataset.type] || 0) + 1;
-      router();
+    case 'navq': {
+      const qs = questionsByType(el.dataset.type);
+      const target = Math.min(Math.max(parseInt(el.dataset.index, 10) - 1, 0), qs.length - 1);
+      goto(`#/question/${el.dataset.type}/${target + 1}`);
       break;
+    }
     case 'answer':
       handleAnswer(el.dataset.slot);
       break;
@@ -343,6 +371,16 @@ document.addEventListener('click', (e) => {
 window.addEventListener('hashchange', router);
 
 // ---------- 启动 ----------
+
+// 后台预加载全部牌图，之后切题零延迟
+setTimeout(() => {
+  const names = new Set();
+  loadQuestions().forEach(q => {
+    q.tiles.forEach(t => names.add(t));
+    q.options.forEach(o => { if (o) names.add(o); });
+  });
+  names.forEach(n => { const img = new Image(); img.src = tileImage(n); });
+}, 300);
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW 注册失败:', err));

@@ -151,6 +151,15 @@ body {
 @media (min-width: 768px) {
   body { max-width: 760px; }
   .tabbar { max-width: 760px; }
+
+  /* 底部导航收敛：不再左右拉满 */
+  .tabbar { justify-content: center; gap: 10vw; }
+  .tab { flex: 0 0 auto; padding: 8px 28px 6px; }
+
+  /* 牌面放大填空间 */
+  .tile-img { width: 68px; height: 94px; }
+  .option-img { width: 72px; height: 100px; }
+  .q-nav-btn { padding: 13px 30px; font-size: 15px; }
   .page-header h1 { font-size: 26px; }
   .page-header .subtitle { font-size: 14px; }
 
@@ -185,10 +194,25 @@ body {
   .option-img { width: 46px; height: 64px; }
 }
 
-/* 跳过按钮 */
-.btn-skip {
-  padding: 6px 12px; border: none; border-radius: 8px;
-  background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
-  white-space: nowrap;
+/* 上一题/下一题导航 */
+.q-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 22px; gap: 12px;
 }
-.btn-skip:active { color: var(--green); }
+.q-nav-btn {
+  padding: 11px 22px; border: 1.5px solid #ddd9cf; border-radius: 10px;
+  background: var(--card); color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer;
+}
+.q-nav-btn.primary {
+  background: var(--green); border-color: var(--green); color: #fff; font-weight: 600;
+}
+.q-nav-btn:active { opacity: .85; }
+.q-nav-end { font-size: 12px; color: var(--muted); }
+
+/* 答题页垂直分布：内容不满屏时均匀撑开，消除大片底部空白 */
+.q-flow {
+  display: flex; flex-direction: column;
+  min-height: calc(100dvh - 120px);
+}
+.q-flow .tiles { flex-shrink: 0; }
+.q-flow .q-nav { margin-top: auto; padding-top: 22px; }
