@@ -4,7 +4,7 @@
  * 业务规则与小程序版一致：每题型免费 15 题，答对记完成
  */
 
-const APP_VERSION = 'v0.2.1';
+const APP_VERSION = 'v0.3.0';
 const FREE_LIMIT = 15;
 const STORE_KEYS = {
   COMPLETED: 'cymys_completedQuestions',
@@ -103,9 +103,9 @@ function organizeTileRows(tiles) {
   return [sorted[0], [...sorted[1], ...(sorted[2] || [])]];
 }
 
-// ---------- 页面：拆搭闯关（首页） ----------
+// ---------- 页面：擂台（拆搭闯关） ----------
 
-function renderHome() {
+function renderPractice() {
   const activated = isActivated();
   const types = [
     { type: 'basic', label: '基础题', cls: 'easy' },
@@ -270,6 +270,191 @@ function handleAnswer(slot) {
   }
 }
 
+// ---------- 页面：茶馆（内容 hub） ----------
+
+function renderTeahouse() {
+  const qs = questionsByType('basic');
+  const firstUn = qs.find(q => !isCompleted(q.id));
+  const todayIndex = Math.floor(Date.now() / 86400000) % HANGHUA.length;
+  const term = HANGHUA[todayIndex];
+
+  // 今日一题
+  const dailyCard = firstUn ? `
+    <div class="daily-card" data-action="start" data-type="basic" role="button">
+      <div class="daily-left">
+        <span class="daily-label">今日一题</span>
+        <b>${esc(firstUn.title)}</b>
+      </div>
+      <span class="daily-go">开练 ›</span>
+    </div>` : `
+    <div class="daily-card done" data-action="navq-jump" role="button">
+      <div class="daily-left"><span class="daily-label">今日一题</span><b>今日题目已全部完成 🎉</b></div>
+    </div>`;
+
+  const pillars = [
+    { to: '#/practice', icon: '🎯', title: '擂台', desc: '拆搭练习', sub: `${completedCount('basic') + completedCount('error_prone')} 题已完成` },
+    { to: '#/paijing', icon: '📖', title: '牌经', desc: '牌理课堂', sub: `${PAIJING.length} 课` },
+    { to: '#/paipu', icon: '🎴', title: '牌谱', desc: '牌型图鉴', sub: `${PAIPU.length} 种牌型` },
+    { to: '#/shuchang', icon: '📺', title: '书场', desc: '视频讲堂', sub: VIDEOS.length ? '陆续开讲' : '筹备中' },
+  ];
+
+  $view.innerHTML = `
+    <div class="page">
+      <header class="page-header home-head">
+        <div><h1>川麻茶馆</h1><p class="subtitle">围炉论牌，且吃茶来</p></div>
+        <span class="ver">${APP_VERSION}</span>
+      </header>
+      ${dailyCard}
+      <div class="hub-cards">
+        ${pillars.map(p => `
+          <div class="pillar-card" data-action="nav" data-to="${p.to}" role="button">
+            <span class="pillar-icon">${p.icon}</span>
+            <b>${p.title}</b>
+            <span class="pillar-desc">${p.desc}</span>
+            <span class="pillar-sub">${p.sub}</span>
+          </div>`).join('')}
+      </div>
+      <div class="term-daily" data-action="nav" data-to="#/hanghua" role="button">
+        <span class="term-tag">今日行话</span>
+        <div class="term-body">
+          <b>${esc(term.term)}</b>
+          <span class="term-py">${esc(term.pinyin)}</span>
+          <p>${esc(term.meaning)}</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ---------- 页面：牌谱（牌型图鉴） ----------
+
+function renderPaipu(id) {
+  if (id) {
+    const item = PAIPU.find(p => p.id === id);
+    if (!item) { location.hash = '#/paipu'; return; }
+    const rows = organizeTileRows(item.tiles);
+    $view.innerHTML = `
+      <div class="page">
+        <header class="page-header question-header">
+          <button class="btn-back" data-action="nav" data-to="#/paipu">‹ 图鉴</button>
+          <h1>${esc(item.name)}</h1>
+          <span class="fan-badge">${esc(item.fan)}</span>
+        </header>
+        <div class="tiles">${rows.map(row => `
+          <div class="tile-row">${row.map(n =>
+            `<img class="tile-img" src="${tileImage(n)}" alt="${esc(n)}" loading="eager" decoding="async" draggable="false">`).join('')}</div>`).join('')}
+        </div>
+        <p class="paipu-desc">${esc(item.desc)}</p>
+      </div>`;
+    return;
+  }
+  $view.innerHTML = `
+    <div class="page">
+      <header class="page-header home-head"><div><h1>牌谱图鉴</h1><p class="subtitle">川麻将番种，一图一乾坤</p></div></header>
+      <div class="paipu-list">
+        ${PAIPU.map(p => `
+          <div class="paipu-card" data-action="paipu-open" data-id="${p.id}" role="button">
+            <div class="paipu-preview">${p.tiles.slice(0, 5).map(n =>
+              `<img src="${tileImage(n)}" alt="" loading="lazy" decoding="async">`).join('')}</div>
+            <div class="paipu-info">
+              <b>${esc(p.name)}</b>
+              <span class="fan-badge small">${esc(p.fan)}</span>
+            </div>
+          </div>`).join('')}
+      </div>
+      <p class="coming-tip">更多番种整理中……</p>
+    </div>`;
+}
+
+// ---------- 页面：牌经（牌理课堂） ----------
+
+function renderPaijing(id) {
+  if (id) {
+    const lesson = PAIJING.find(l => l.id === id);
+    if (!lesson) { location.hash = '#/paijing'; return; }
+    $view.innerHTML = `
+      <div class="page">
+        <header class="page-header question-header">
+          <button class="btn-back" data-action="nav" data-to="#/paijing">‹ 牌经</button>
+          <h1>第${lesson.no}课</h1>
+        </header>
+        <div class="lesson-detail">
+          <h2>${esc(lesson.title)}</h2>
+          ${lesson.paragraphs.map(p => `<p>${esc(p)}</p>`).join('')}
+        </div>
+      </div>`;
+    return;
+  }
+  $view.innerHTML = `
+    <div class="page">
+      <header class="page-header home-head"><div><h1>牌经</h1><p class="subtitle">牌理课堂，从数字到算牌</p></div></header>
+      <div class="lesson-list">
+        ${PAIJING.map(l => `
+          <div class="lesson-card" data-action="paijing-open" data-id="${l.id}" role="button">
+            <span class="lesson-no">第${l.no}课</span>
+            <div class="lesson-info"><b>${esc(l.title)}</b><p>${esc(l.digest)}</p></div>
+            <span class="lesson-arrow">›</span>
+          </div>`).join('')}
+      </div>
+      <p class="coming-tip">更多课程编写中……</p>
+    </div>`;
+}
+
+// ---------- 页面：书场（视频讲堂） ----------
+
+function renderShuchang() {
+  $view.innerHTML = `
+    <div class="page">
+      <header class="page-header home-head"><div><h1>书场</h1><p class="subtitle">视频讲堂，听牌理故事</p></div></header>
+      <div class="video-list">
+        ${VIDEOS.map(v => `
+          <div class="video-card ${v.status === 'pending' ? 'pending' : ''}">
+            <div class="video-thumb"><span>▶</span></div>
+            <div class="video-info">
+              <b>${esc(v.title)}</b>
+              <p>${esc(v.desc)}</p>
+              <span class="video-meta">${v.status === 'pending' ? '筹备中' : esc(v.duration)}</span>
+            </div>
+          </div>`).join('')}
+      </div>
+      <p class="coming-tip">视频陆续上架，敬请期待</p>
+    </div>`;
+}
+
+// ---------- 页面：行话（川麻词典） ----------
+
+let hanghuaKeyword = '';
+
+function renderHanghua() {
+  const kw = hanghuaKeyword.trim().toLowerCase();
+  const list = HANGHUA.filter(t =>
+    !kw || t.term.includes(kw) || t.pinyin.includes(kw) || t.meaning.toLowerCase().includes(kw));
+
+  $view.innerHTML = `
+    <div class="page">
+      <header class="page-header home-head"><div><h1>行话</h1><p class="subtitle">川麻将江湖的黑话与门道</p></div></header>
+      <input class="search-box" id="hanghua-search" type="search"
+             placeholder="搜术语，比如：定缺" value="${esc(hanghuaKeyword)}">
+      <div class="term-list">
+        ${list.map(t => `
+          <div class="term-card">
+            <div class="term-head"><b>${esc(t.term)}</b><span class="term-py">${esc(t.pinyin)}</span></div>
+            <p>${esc(t.meaning)}</p>
+          </div>`).join('') || '<p class="coming-tip">没找到这个词，换个关键字试试</p>'}
+      </div>
+    </div>`;
+
+  const search = document.getElementById('hanghua-search');
+  if (search) {
+    search.addEventListener('input', (e) => {
+      hanghuaKeyword = e.target.value;
+      const pos = e.target.selectionStart;
+      renderHanghua();
+      const el = document.getElementById('hanghua-search');
+      if (el) { el.focus(); el.setSelectionRange(pos, pos); }
+    });
+  }
+}
+
 // ---------- 页面：我的 ----------
 
 function renderProfile() {
@@ -320,16 +505,27 @@ function router() {
     const parts = hash.split('/');
     const type = parts[2] === 'error_prone' ? 'error_prone' : 'basic';
     renderQuestion(type, parts[3]);
+  } else if (hash.startsWith('#/paipu')) {
+    renderPaipu(hash.split('/')[2]);
+  } else if (hash.startsWith('#/paijing')) {
+    renderPaijing(hash.split('/')[2]);
+  } else if (hash === '#/shuchang') {
+    renderShuchang();
+  } else if (hash === '#/hanghua') {
+    renderHanghua();
+  } else if (hash === '#/practice') {
+    renderPractice();
   } else if (hash === '#/profile') {
     renderProfile();
   } else if (hash === '#/activate') {
     renderActivatePlaceholder();
   } else {
-    renderHome();
+    renderTeahouse();
   }
-  // 底部导航高亮
+  // 导航高亮：按路径前缀匹配
+  const section = hash.split('/')[1] === 'question' ? 'practice' : hash.split('/')[1] || 'home';
   document.querySelectorAll('.tabbar .tab').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.to === hash || (hash.startsWith('#/question') && tab.dataset.to === '#/home'));
+    tab.classList.toggle('active', (tab.dataset.to || '').startsWith('#/' + section));
   });
 }
 
@@ -356,6 +552,15 @@ document.addEventListener('click', (e) => {
       goto(`#/question/${el.dataset.type}/${target + 1}`);
       break;
     }
+    case 'paipu-open':
+      goto('#/paipu/' + el.dataset.id);
+      break;
+    case 'paijing-open':
+      goto('#/paijing/' + el.dataset.id);
+      break;
+    case 'navq-jump':
+      goto('#/practice');
+      break;
     case 'answer':
       handleAnswer(el.dataset.slot);
       break;
