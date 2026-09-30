@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#1a6b3c">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/mahjong/w3.jpg">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>川渝麻研社 · 麻将拆搭练习</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="view"></main>
+  <nav class="tabbar">
+    <div class="tab" data-to="#/home" data-action="nav"><span class="tab-icon">🀄</span><span>拆搭闯关</span></div>
+    <div class="tab" data-to="#/profile" data-action="nav"><span class="tab-icon">👤</span><span>我的</span></div>
+  </nav>
+  <script src="js/data/questions.csv.js"></script>
+  <script src="js/csvParser.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

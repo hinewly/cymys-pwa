@@ -1,0 +1,13 @@
+{
+  "name": "川渝麻研社 · 麻将拆搭练习",
+  "short_name": "川渝麻研社",
+  "description": "血战到底麻将拆搭练习",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f7f6f2",
+  "theme_color": "#1a6b3c",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
