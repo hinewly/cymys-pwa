@@ -10,3 +10,11 @@
 - 我的页：进度统计 + 激活入口（占位，等 cymys-api 后端）
 - PWA：manifest + Service Worker（cache-first，CACHE_VERSION v0.1.0）+ 应用图标
 - 存储：localStorage 保存完成题目与设备 ID（openid 的替代品）
+
+## v0.1.1 (2026-10-01)
+
+响应式适配：手机优先，兼顾平板。
+
+- 新增 4 档断点：超小屏（≤360px 压缩留白）/ 手机（默认）/ 小平板（520px+ 牌面放大）/ iPad（768px+ 题型卡并排、选项四列）/ 桌面（1024px+ 再加宽）
+- 100vh → 100dvh，修正 iOS Safari 地址栏遮挡
+- iPad 不再是"居中细长条"，利用横向空间

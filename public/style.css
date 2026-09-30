@@ -20,6 +20,7 @@ body {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
+  min-height: 100dvh;
   padding-bottom: calc(60px + env(safe-area-inset-bottom));
 }
 
@@ -136,3 +137,50 @@ body {
   padding: 8px 0 6px; font-size: 11px; color: var(--muted); cursor: pointer; }
 .tab.active { color: var(--green); font-weight: 600; }
 .tab-icon { font-size: 20px; }
+
+/* ============ 响应式适配 ============ */
+
+/* 手机横屏 / 小平板：放宽内容列，牌面放大 */
+@media (min-width: 520px) {
+  .tile-img { width: 52px; height: 72px; }
+  .option-img { width: 60px; height: 83px; }
+  .page { padding: 20px 24px; }
+}
+
+/* 平板（iPad 竖屏及以上）：利用横向空间 */
+@media (min-width: 768px) {
+  body { max-width: 760px; }
+  .tabbar { max-width: 760px; }
+  .page-header h1 { font-size: 26px; }
+  .page-header .subtitle { font-size: 14px; }
+
+  /* 首页两张题型卡并排 */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  /* 答题区居中放宽 */
+  .tiles { padding: 20px; }
+  .tile-img { width: 58px; height: 80px; }
+  .options { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .option-img { width: 64px; height: 88px; }
+  .q-desc { font-size: 15px; }
+
+  /* 统计与个人卡更舒展 */
+  .stat b { font-size: 24px; }
+}
+
+/* iPad 横屏 / 桌面：再加宽，题型卡内部留白加大 */
+@media (min-width: 1024px) {
+  body { max-width: 900px; }
+  .tabbar { max-width: 900px; }
+  .cards { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .question-card { padding: 24px; }
+  .tile-img { width: 64px; height: 88px; }
+}
+
+/* 超小屏（iPhone SE 级别）压缩留白 */
+@media (max-width: 360px) {
+  .page { padding: 12px; }
+  .tile-img { width: 38px; height: 53px; }
+  .options { gap: 8px; }
+  .option-img { width: 46px; height: 64px; }
+}
