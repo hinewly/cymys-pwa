@@ -1,0 +1,59 @@
+name: Deploy cymys-pwa to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      # 自动 bump CACHE_VERSION (SW) + APP_VERSION (app.js)
+      # 不 commit 回仓库（build-time 修改）
+      - name: Bump versions
+        run: |
+          set -e
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+
+          # 1. Bump CACHE_VERSION in service-worker.js
+          CURRENT_CACHE=$(grep -oE "CACHE_VERSION = '[^']+'" public/service-worker.js | grep -oE "'[^']+'" | tr -d "'")
+          NEW_CACHE="v${CURRENT_CACHE##*v}-${SHORT_SHA}"
+          sed -i "s/CACHE_VERSION = '${CURRENT_CACHE}'/CACHE_VERSION = '${NEW_CACHE}'/" public/service-worker.js
+          echo "CACHE: ${CURRENT_CACHE} → ${NEW_CACHE}"
+
+          # 2. Bump APP_VERSION in app.js
+          CURRENT_APP=$(grep -oE "APP_VERSION = '[^']+'" public/app.js | grep -oE "'[^']+'" | tr -d "'")
+          NEW_APP="${CURRENT_APP}-${SHORT_SHA}"
+          sed -i "s/APP_VERSION = '${CURRENT_APP}'/APP_VERSION = '${NEW_APP}'/" public/app.js
+          echo "APP: ${CURRENT_APP} → ${NEW_APP}"
+
+      - name: Sync changelog
+        run: cp CHANGELOG.md public/CHANGELOG.md
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './public'
+
+      - name: Deploy cymys-pwa to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
