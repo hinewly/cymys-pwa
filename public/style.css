@@ -184,3 +184,11 @@ body {
   .options { gap: 8px; }
   .option-img { width: 46px; height: 64px; }
 }
+
+/* 跳过按钮 */
+.btn-skip {
+  padding: 6px 12px; border: none; border-radius: 8px;
+  background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
+  white-space: nowrap;
+}
+.btn-skip:active { color: var(--green); }

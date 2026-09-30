@@ -4,7 +4,7 @@
  * 业务规则与小程序版一致：每题型免费 15 题，答对记完成
  */
 
-const APP_VERSION = 'v0.1.1';
+const APP_VERSION = 'v0.1.2';
 const FREE_LIMIT = 15;
 const STORE_KEYS = {
   COMPLETED: 'cymys_completedQuestions',
@@ -76,6 +76,9 @@ function getDeviceId() {
   }
   return id;
 }
+
+// ---------- 跳过状态（答题中点"跳过"时前移，不记完成） ----------
+const skipState = { basic: 0, error_prone: 0 };
 
 // ---------- 视图渲染工具 ----------
 
@@ -170,8 +173,10 @@ function renderQuestion(type) {
     return;
   }
 
-  // 当前题：第一道未完成的；全完成则从头开始
-  const current = qs.find(q => !isCompleted(q.id)) || qs[0];
+  // 当前题：第一道未完成的（按跳过偏移前移）；全完成则从头循环
+  const list = qs.filter(q => !isCompleted(q.id));
+  const pool = list.length ? list : qs;
+  const current = pool[skipState[type] % pool.length];
   const index = qs.indexOf(current) + 1;
 
   const rows = organizeTileRows(current.tiles).map(row => `
@@ -195,6 +200,7 @@ function renderQuestion(type) {
         <button class="btn-back" data-action="nav" data-to="#/home">‹ 返回</button>
         <h1>${esc(current.title)}</h1>
         <span class="q-index">第${index}题</span>
+        <button class="btn-skip" data-action="skip" data-type="${type}">跳过 ›</button>
       </header>
       <p class="q-desc">${esc(current.description)}</p>
       <div class="tiles">${rows}</div>
@@ -215,6 +221,7 @@ function handleAnswer(slot) {
 
   if (correct) {
     completeQuestion(qid);
+    skipState[type] = 0;  // 完成状态变化，跳过偏移归零
     const q = questionsByType(type).find(x => x.id === qid);
     const done = completedCount(type);
     const total = questionsByType(type).length;
@@ -305,19 +312,30 @@ document.addEventListener('click', (e) => {
   if (!el || el.disabled) return;
   const { action, type, to } = el.dataset;
 
+  // 目标 hash 与当前相同时 hashchange 不触发，手动重渲染
+  const goto = (target) => {
+    if (location.hash === target) router();
+    else location.hash = target;
+  };
+
   switch (action) {
     case 'start':
     case 'next':
-      location.hash = `#/question/${type}`;
+      skipState[type] = 0;
+      goto(`#/question/${type}`);
+      break;
+    case 'skip':
+      skipState[el.dataset.type] = (skipState[el.dataset.type] || 0) + 1;
+      router();
       break;
     case 'answer':
       handleAnswer(el.dataset.slot);
       break;
     case 'goto-activate':
-      location.hash = '#/activate';
+      goto('#/activate');
       break;
     case 'nav':
-      location.hash = to || '#/home';
+      goto(to || '#/home');
       break;
   }
 });
