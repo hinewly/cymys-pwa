@@ -157,17 +157,20 @@ body {
 .stat span { font-size: 12px; color: var(--muted); }
 .version { text-align: center; color: var(--muted); font-size: 11px; margin-top: 24px; }
 
-/* 底部导航 */
+/* 导航栏：手机底部墨绿条，iPad/桌面切换为顶栏 */
 .tabbar {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
   width: 100%; max-width: 480px; display: flex;
-  background: var(--card); border-top: 1px solid #eee;
+  background: linear-gradient(180deg, #266146 0%, #1d5038 100%);
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.18);
   padding-bottom: env(safe-area-inset-bottom); z-index: 100;
 }
-.tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 8px 0 6px; font-size: 11px; color: var(--muted); cursor: pointer; }
-.tab.active { color: var(--green); font-weight: 600; }
-.tab-icon { font-size: 20px; }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 0 7px; font-size: 11px; color: rgba(255,255,255,0.68); cursor: pointer;
+  transition: color .15s; }
+.tab svg { width: 22px; height: 22px; }
+.tab.active { color: #e8c98a; font-weight: 600; }
+.brand { display: none; }
 
 /* ============ 响应式适配 ============ */
 
@@ -178,39 +181,39 @@ body {
   .page { padding: 16px 20px; }
 }
 
-/* 平板（iPad 竖屏及以上）：利用横向空间 */
+/* 平板（iPad 竖屏及以上）：导航改顶栏 + 布局放宽 */
 @media (min-width: 768px) {
-  body { max-width: 760px; }
-  .tabbar { max-width: 760px; }
+  body { display: flex; flex-direction: column; max-width: 760px; }
+  #view { flex: 1; width: 100%; }
+  .tabbar {
+    position: relative; transform: none; width: 100%; max-width: none;
+    order: -1; display: flex; align-items: center; justify-content: center;
+    padding: 0 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.22);
+  }
+  .brand {
+    display: block; position: absolute; left: 22px; top: 50%; transform: translateY(-50%);
+    color: #f0e6cd; font-size: 15px; font-weight: 600; letter-spacing: 1px;
+  }
+  .tab {
+    flex: 0 0 auto; flex-direction: row; gap: 8px; align-items: center;
+    padding: 9px 22px; margin: 8px 4px; border-radius: 22px; font-size: 14px;
+  }
+  .tab.active { background: rgba(255,255,255,0.13); }
 
-  /* 底部导航收敛：不再左右拉满 */
-  .tabbar { justify-content: center; gap: 10vw; }
-  .tab { flex: 0 0 auto; padding: 8px 28px 6px; }
-
-  /* 牌面放大填空间 */
-  .tile-img { width: 68px; height: 94px; }
-  .q-nav-btn { padding: 13px 30px; font-size: 15px; }
+  .page { padding: 16px 20px; }
   .page-header h1 { font-size: 26px; }
   .page-header .subtitle { font-size: 14px; }
-
-  /* 首页两张题型卡并排 */
   .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-
-  /* 答题区居中放宽 */
   .tiles { padding: 18px 24px; }
   .tile-img { width: 58px; height: 80px; }
-  .options { grid-template-columns: repeat(4, 1fr); gap: 14px; }
-  
   .q-desc { font-size: 15px; }
-
-  /* 统计与个人卡更舒展 */
+  .q-nav-btn { padding: 13px 30px; font-size: 15px; }
   .stat b { font-size: 24px; }
 }
 
 /* iPad 横屏 / 桌面：再加宽，题型卡内部留白加大 */
 @media (min-width: 1024px) {
   body { max-width: 900px; }
-  .tabbar { max-width: 900px; }
   .cards { grid-template-columns: 1fr 1fr; gap: 24px; }
   .question-card { padding: 24px; }
   .tile-img { width: 66px; height: 91px; }
