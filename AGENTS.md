@@ -1,24 +1,37 @@
 # cymys-pwa 项目约定
 
-> 叠加在目录级 / Users/zoujiean/CodeX 级约定之上。版本号规则参照 vocab-pwa：
-> 改 public/ 下文件必须递增 public/service-worker.js 的 CACHE_VERSION（及前端显示版本）。
-> 版本号用递增号（v0.1.0 → v0.1.1），不用 commit sha。
+> 给 Codex 的项目规则。版本号规则参照 vocab-pwa：
+> 改 public/ 下任何文件必须递增 public/sw.js 的 CACHE_VERSION（及 js/app.js 的 APP_VERSION）。
+> 版本号用递增号（v0.3.0 → v0.3.1），不用 commit sha。
 
-## 技术决策（2026-09-30 与用户确认）
+## 产品定位（2026-10-01 确立）
 
-1. **独立仓库**：与 vocab-pwa 完全分开，互不影响
-2. **激活码后端**：克隆 daobox-api 为独立 cymys-api Worker + 独立 D1 库，
-   不改动 vocab 正在运行的线上系统
-3. **前端部署**：倾向 Cloudflare Worker 静态托管（国内访问稳），
-   GitHub Pages 作为备用线，最终以用户确认为准
-4. **域名体系**：用户自有域名（daobox.app 同一 Cloudflare 账号），
-   麻将项目用子域（如 cymys.daobox.app，最终名字用户定）
-5. **免费优先**：不依赖微信云函数/任何收费服务；
-   视频方案候选：B站内嵌（零成本）或 Cloudflare R2（10GB 免费流量免费）
-6. **安全定位**：防君子级别即可，产品定价低，不为小钱建重防线；
-   题库是否走"激活后按需拉取"待用户确认
+**"川麻茶馆"文化平台**，不是刷题工具。五个模块：擂台（拆搭练习，已建成）、
+牌经（牌理课堂）、牌谱（牌型图鉴）、书场（视频讲堂）、行话（川麻词典）。
+后四个是骨架 + 示例数据，内容由用户逐步提供。
+设计决策与理由见 docs/设计决策.md；填内容的方法见 docs/内容填写指南.md。
 
-## 数据来源
+## 视觉基准（v0.2.x~v0.3.x，用户已认可方向）
 
-- 题库：小程序 `data/questions_csv.js`（CSV 内嵌，72 题，CSV 为唯一数据源）
-- 麻将牌图片：小程序 `assets/mahjong/`（27 张 JPG，约 416K）
+- 材质体系：牌桌绿呢 / 象牙白牌面（mix-blend-mode 处理白底 JPG）/ 墨绿导航 / 米金点缀
+- 新页面必须沿用：暖色渐变底、卡片投影、SVG 图标（禁 emoji 当图标）
+- 硬性要求：答题页一屏呈现（iPad 不滚动）
+
+## 技术栈与结构
+
+- 纯 HTML/CSS/vanilla JS，无框架无构建；public/ 是整站
+- 内容数据全部在 public/js/data/（与页面代码分离）
+- hash 路由（#/home / #/practice / #/question/... / #/paipu/... 等）
+
+## 发布双线
+
+1. **Cloudflare（主）**：cymys.daobox.app，`cd worker && npx wrangler deploy`
+2. **GitHub Pages（备）**：push main 自动部署
+   （注意 workflow 里文件路径是 sw.js / js/app.js，与 vocab 不同）
+
+## 已知待办
+
+- [ ] cymys-api 激活码后端（克隆 daobox-api，独立 D1）
+- [ ] 激活页接后端（现在是占位）
+- [ ] 书场视频播放页（url 字段已预留）
+- [ ] 内容填充（牌谱/牌经/行话，用户提供素材）
