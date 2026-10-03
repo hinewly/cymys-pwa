@@ -4,7 +4,7 @@
  * 业务规则与小程序版一致：每题型免费 15 题，答对记完成
  */
 
-const APP_VERSION = 'v0.3.1';
+const APP_VERSION = 'v0.5.8';
 const FREE_LIMIT = 15;
 const STORE_KEYS = {
   COMPLETED: 'cymys_completedQuestions',
@@ -55,17 +55,8 @@ function completedCount(type) {
 }
 
 function isActivated() {
-  try {
-    const cached = JSON.parse(localStorage.getItem(STORE_KEYS.ACTIVATED));
-    if (cached && cached.activated) {
-      if (cached.type === 'yearly' && cached.expireAt && new Date(cached.expireAt) < new Date()) {
-        localStorage.removeItem(STORE_KEYS.ACTIVATED);
-        return false;
-      }
-      return true;
-    }
-  } catch { /* ignore */ }
-  return false;
+  // 激活码体系已退役：全站免费，新题额度由 DaoBox 统一配额管理
+  return true;
 }
 
 function getDeviceId() {
@@ -236,7 +227,7 @@ function renderQuestion(type, indexParam) {
     </div>`;
 }
 
-function handleAnswer(slot) {
+async function handleAnswer(slot) {
   const page = document.getElementById('question-page');
   const correct = page.dataset.correct === slot;
   const type = page.dataset.type;
@@ -247,6 +238,20 @@ function handleAnswer(slot) {
   if (navigator.vibrate) navigator.vibrate(correct ? 30 : [60, 40, 60]);
 
   if (correct) {
+    const isNew = !isCompleted(qid);
+    if (isNew) {
+      try {
+        await DaoBox.consume('practice', 1);
+      } catch (e) {
+        if (e && e.quota) {
+          DaoBox.showQuotaModal(e.data);
+          resultBox.innerHTML = '<div class="result wrong"><p class="result-text">今日新题额度已用完，注册登录享 3 倍，明天再来～</p></div>';
+          page.querySelectorAll('.option-btn').forEach(b => { b.disabled = true; });
+          return;
+        }
+        throw e;
+      }
+    }
     completeQuestion(qid);
     const q = questionsByType(type).find(x => x.id === qid);
     const done = completedCount(type);
@@ -292,9 +297,9 @@ function renderTeahouse() {
     </div>`;
 
   const pillars = [
-    { to: '#/practice', icon: '🎯', title: '擂台', desc: '拆搭练习', sub: `${completedCount('basic') + completedCount('error_prone')} 题已完成` },
+    { to: '#/practice', icon: '🎯', title: '拆搭练习', sub: `${completedCount('basic') + completedCount('error_prone')} 题已完成` },
     { to: '#/paijing', icon: '📖', title: '牌经', desc: '牌理课堂', sub: `${PAIJING.length} 课` },
-    { to: '#/paipu', icon: '🎴', title: '牌谱', desc: '牌型图鉴', sub: `${PAIPU.length} 种牌型` },
+    { to: '#/paipu', icon: '🎴', title: '牌谱', desc: '常见牌型', sub: `${PAIPU.length} 种牌型` },
     { to: '#/shuchang', icon: '📺', title: '书场', desc: '视频讲堂', sub: VIDEOS.length ? '陆续开讲' : '筹备中' },
   ];
 
@@ -310,7 +315,7 @@ function renderTeahouse() {
           <div class="pillar-card" data-action="nav" data-to="${p.to}" role="button">
             <span class="pillar-icon">${p.icon}</span>
             <b>${p.title}</b>
-            <span class="pillar-desc">${p.desc}</span>
+            ${p.desc ? `<span class="pillar-desc">${p.desc}</span>` : ''}
             <span class="pillar-sub">${p.sub}</span>
           </div>`).join('')}
       </div>
@@ -325,7 +330,7 @@ function renderTeahouse() {
     </div>`;
 }
 
-// ---------- 页面：牌谱（牌型图鉴） ----------
+// ---------- 页面：牌谱（常见牌型） ----------
 
 function renderPaipu(id) {
   if (id) {
@@ -339,21 +344,24 @@ function renderPaipu(id) {
           <h1>${esc(item.name)}</h1>
           <span class="fan-badge">${esc(item.fan)}</span>
         </header>
+        ${item.tags && item.tags.length ? `<div class="paipu-tags">${item.tags.map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}
         <div class="tiles">${rows.map(row => `
           <div class="tile-row">${row.map(n =>
             `<img class="tile-img" src="${tileImage(n)}" alt="${esc(n)}" loading="eager" decoding="async" draggable="false">`).join('')}</div>`).join('')}
         </div>
         <p class="paipu-desc">${esc(item.desc)}</p>
+        ${item.points && item.points.length ? `<ul class="paipu-points">${item.points.map(pt => `<li>${esc(pt)}</li>`).join('')}</ul>` : ''}
+        ${item.note ? `<p class="paipu-note">${esc(item.note)}</p>` : ''}
       </div>`;
     return;
   }
   $view.innerHTML = `
     <div class="page">
-      <header class="page-header home-head"><div><h1>牌谱图鉴</h1><p class="subtitle">川麻将番种，一图一乾坤</p></div></header>
+      <header class="page-header home-head"><div><h1>常见牌型</h1><p class="subtitle">一图一乾坤</p></div></header>
       <div class="paipu-list">
         ${PAIPU.map(p => `
           <div class="paipu-card" data-action="paipu-open" data-id="${p.id}" role="button">
-            <div class="paipu-preview">${p.tiles.slice(0, 5).map(n =>
+            <div class="paipu-preview">${p.tiles.slice(0, 4).map(n =>
               `<img src="${tileImage(n)}" alt="" loading="lazy" decoding="async">`).join('')}</div>
             <div class="paipu-info">
               <b>${esc(p.name)}</b>
@@ -424,7 +432,26 @@ function renderShuchang() {
 
 let hanghuaKeyword = '';
 
-function renderHanghua() {
+function renderHanghua(id) {
+  if (id) {
+    const idx = HANGHUA.findIndex(t => t.id === id);
+    if (idx < 0) { location.hash = '#/hanghua'; return; }
+    const item = HANGHUA[idx];
+    $view.innerHTML = `
+      <div class="page">
+        <header class="page-header question-header">
+          <button class="btn-back" data-action="nav" data-to="#/hanghua">‹ 行话</button>
+          <h1>${esc(item.term)}</h1>
+          <span class="fan-badge">第 ${idx + 1} 条</span>
+        </header>
+        <div class="term-detail">
+          <div class="term-py">${esc(item.pinyin)}</div>
+          <p>${esc(item.meaning)}</p>
+        </div>
+      </div>`;
+    return;
+  }
+
   const kw = hanghuaKeyword.trim().toLowerCase();
   const list = HANGHUA.filter(t =>
     !kw || t.term.includes(kw) || t.pinyin.includes(kw) || t.meaning.toLowerCase().includes(kw));
@@ -434,12 +461,17 @@ function renderHanghua() {
       <header class="page-header home-head"><div><h1>行话</h1><p class="subtitle">川麻将江湖的黑话与门道</p></div></header>
       <input class="search-box" id="hanghua-search" type="search"
              placeholder="搜术语，比如：定缺" value="${esc(hanghuaKeyword)}">
-      <div class="term-list">
-        ${list.map(t => `
-          <div class="term-card">
-            <div class="term-head"><b>${esc(t.term)}</b><span class="term-py">${esc(t.pinyin)}</span></div>
-            <p>${esc(t.meaning)}</p>
-          </div>`).join('') || '<p class="coming-tip">没找到这个词，换个关键字试试</p>'}
+      <div class="term-grid">
+        ${list.map(t => {
+          const idx = HANGHUA.findIndex(x => x.id === t.id);
+          return `
+          <div class="term-card" data-action="hanghua-open" data-id="${t.id}" role="button">
+            <div class="term-head">
+              <span class="term-no">${String(idx + 1).padStart(2, '0')}</span>
+              <b>${esc(t.term)}</b>
+            </div>
+            <span class="term-py">${esc(t.pinyin)}</span>
+          </div>`;}).join('') || '<p class="coming-tip">没找到这个词，换个关键字试试</p>'}
       </div>
     </div>`;
 
@@ -511,8 +543,8 @@ function router() {
     renderPaijing(hash.split('/')[2]);
   } else if (hash === '#/shuchang') {
     renderShuchang();
-  } else if (hash === '#/hanghua') {
-    renderHanghua();
+  } else if (hash.startsWith('#/hanghua')) {
+    renderHanghua(hash.split('/')[2]);
   } else if (hash === '#/practice') {
     renderPractice();
   } else if (hash === '#/profile') {
@@ -557,6 +589,9 @@ document.addEventListener('click', (e) => {
       break;
     case 'paijing-open':
       goto('#/paijing/' + el.dataset.id);
+      break;
+    case 'hanghua-open':
+      goto('#/hanghua/' + el.dataset.id);
       break;
     case 'navq-jump':
       goto('#/practice');
