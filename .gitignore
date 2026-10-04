@@ -3,3 +3,4 @@ node_modules/
 worker/.wrangler/
 worker/.dev.vars
 *.log
+.wrangler/
