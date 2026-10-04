@@ -4,7 +4,7 @@
  * 业务规则与小程序版一致：每题型免费 15 题，答对记完成
  */
 
-const APP_VERSION = 'v0.5.8';
+const APP_VERSION = 'v0.6.4';
 const FREE_LIMIT = 15;
 const STORE_KEYS = {
   COMPLETED: 'cymys_completedQuestions',
@@ -296,11 +296,17 @@ function renderTeahouse() {
       <div class="daily-left"><span class="daily-label">今日一题</span><b>今日题目已全部完成 🎉</b></div>
     </div>`;
 
+  const svg = {
+    practice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/></svg>',
+    paijing: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15.5H6.5A2.5 2.5 0 0 0 4 21V5.5z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/><path d="M9 7.5h7M9 11h5"/></svg>',
+    paipu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="9" height="14" rx="1.8"/><rect x="10" y="4" width="9" height="14" rx="1.8"/><path d="M13.5 8h2.5M13.5 11.5h2.5" stroke-width="1.4"/></svg>',
+    shuchang: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5L10 9.5z" fill="currentColor" stroke="none"/></svg>',
+  };
   const pillars = [
-    { to: '#/practice', icon: '🎯', title: '拆搭练习', sub: `${completedCount('basic') + completedCount('error_prone')} 题已完成` },
-    { to: '#/paijing', icon: '📖', title: '牌经', desc: '牌理课堂', sub: `${PAIJING.length} 课` },
-    { to: '#/paipu', icon: '🎴', title: '牌谱', desc: '常见牌型', sub: `${PAIPU.length} 种牌型` },
-    { to: '#/shuchang', icon: '📺', title: '书场', desc: '视频讲堂', sub: VIDEOS.length ? '陆续开讲' : '筹备中' },
+    { to: '#/practice', icon: svg.practice, title: '拆搭练习', desc: '川麻拆搭与听牌闯关，每日一题练手感，逐步提高实战判断力。', sub: `${completedCount('basic') + completedCount('error_prone')} 题已完成`, accent: '#1a6b3c' },
+    { to: '#/paijing', icon: svg.paijing, title: '牌经', desc: '牌理课堂系统讲解打法思路，从基础规则到进阶技巧，循序渐进。', sub: `${PAIJING.length} 课`, accent: '#8a5a2b' },
+    { to: '#/paipu', icon: svg.paipu, title: '牌谱', desc: '常见牌型图鉴与解析，配牌面示意和行牌思路，遇到类似局面有参考。', sub: `${PAIPU.length} 种牌型`, accent: '#8a2f2b' },
+    { to: '#/shuchang', icon: svg.shuchang, title: '书场', desc: '视频讲堂由浅入深讲解川麻打法，配合实战案例更容易理解吸收。', sub: VIDEOS.length ? '陆续开讲' : '筹备中', accent: '#2b5f8a' },
   ];
 
   $view.innerHTML = `
@@ -312,11 +318,14 @@ function renderTeahouse() {
       ${dailyCard}
       <div class="hub-cards">
         ${pillars.map(p => `
-          <div class="pillar-card" data-action="nav" data-to="${p.to}" role="button">
+          <div class="pillar-card" data-action="nav" data-to="${p.to}" role="button" style="--accent:${p.accent}">
             <span class="pillar-icon">${p.icon}</span>
-            <b>${p.title}</b>
-            ${p.desc ? `<span class="pillar-desc">${p.desc}</span>` : ''}
-            <span class="pillar-sub">${p.sub}</span>
+            <div class="pillar-body">
+              <b>${p.title}</b>
+              ${p.desc ? `<span class="pillar-desc">${p.desc}</span>` : ''}
+              <span class="pillar-sub">${p.sub}</span>
+            </div>
+            <span class="pillar-arrow">›</span>
           </div>`).join('')}
       </div>
       <div class="term-daily" data-action="nav" data-to="#/hanghua" role="button">
@@ -327,6 +336,8 @@ function renderTeahouse() {
           <p>${esc(term.meaning)}</p>
         </div>
       </div>
+      <p style="text-align:center;margin:16px 0 0;"><a href="https://daobox.app?src=cymys" style="color:inherit;text-decoration:none;border-bottom:1px solid currentColor;">← 返回 DaoBox 工具箱</a></p>
+      <p class="disclaimer">本站为麻将学习交流工具，仅供娱乐，不涉及任何博彩行为。理性游戏，未满18周岁不建议使用。</p>
     </div>`;
 }
 
@@ -489,43 +500,79 @@ function renderHanghua(id) {
 
 // ---------- 页面：我的 ----------
 
-function renderProfile() {
+async function renderProfile() {
   const basic = questionsByType('basic');
   const err = questionsByType('error_prone');
   const bDone = completedCount('basic');
   const eDone = completedCount('error_prone');
-  const activated = isActivated();
+  const user = window.DaoBox ? DaoBox.user : null;
 
+  // 先渲染骨架，再异步拉配额
   $view.innerHTML = `
     <div class="page">
       <header class="page-header"><h1>我的</h1></header>
       <div class="profile-card">
         <div class="avatar">🀄</div>
         <div>
-          <b>麻友</b>
-          <p class="muted">设备 ${esc(getDeviceId().slice(0, 8))}</p>
+          <b id="profile-name">${user ? esc(user.nickname || user.phone.slice(7)) : '麻友（未登录）'}</b>
+          <p class="muted" id="profile-sub">${user ? 'DaoBox 账号' : '登录后每日额度 ×3'}</p>
         </div>
-        <span class="badge ${activated ? 'on' : ''}">${activated ? '已激活' : '未激活'}</span>
+      </div>
+      <div class="quota-row" id="profile-quota">
+        <div class="stat"><b>—</b><span>今日剩余</span></div>
+        <div class="stat"><b>—</b><span>每日上限</span></div>
       </div>
       <div class="stats-row">
         <div class="stat"><b>${bDone}/${basic.length}</b><span>基础题</span></div>
         <div class="stat"><b>${eDone}/${err.length}</b><span>易错题</span></div>
       </div>
-      <button class="btn-start" data-action="goto-activate">${activated ? '管理激活' : '输入注册码激活'}</button>
+      ${user
+        ? '<button class="btn-start" id="btn-checkin" style="margin-bottom:10px;">每日打卡 +2 次</button>'
+        : `<a class="btn-start" id="btn-login" href="${DaoBox ? esc(DaoBox.loginUrl()) : 'https://daobox.app/login'}" style="text-decoration:none;display:block;text-align:center;">注册 / 登录 → 额度 ×3</a>`}
+      <p class="disclaimer">本站为麻将学习交流工具，仅供娱乐，不涉及任何博彩行为。理性游戏，未满18周岁不建议使用。</p>
       <p class="version">${APP_VERSION}</p>
     </div>`;
-}
 
-function renderActivatePlaceholder() {
-  $view.innerHTML = `
-    <div class="page center">
-      <div class="modal-card">
-        <div class="modal-icon">🔑</div>
-        <h2>激活注册码</h2>
-        <p>激活功能即将开放（需要后端 cymys-api 部署后接入）。<br>当前版本为开发预览版。</p>
-        <button class="btn-back" data-action="nav" data-to="#/home">返回</button>
-      </div>
-    </div>`;
+  // 异步拉取剩余配额
+  if (window.DaoBox) {
+    try {
+      const q = await DaoBox.quota('practice');
+      if (q && q.ok) {
+        const el = document.getElementById('profile-quota');
+        if (el) el.innerHTML = `
+          <div class="stat"><b>${q.remaining}</b><span>今日剩余</span></div>
+          <div class="stat"><b>${q.limit}</b><span>每日上限</span></div>`;
+      }
+    } catch (e) { /* fail-open：网络不通时保持 — */ }
+  }
+
+  // 打卡按钮
+  const checkinBtn = document.getElementById('btn-checkin');
+  if (checkinBtn) {
+    checkinBtn.addEventListener('click', async () => {
+      checkinBtn.disabled = true;
+      checkinBtn.textContent = '打卡中…';
+      try {
+        const r = await DaoBox.checkin();
+        if (r && r.ok) {
+          checkinBtn.textContent = '✅ 已打卡 +2 次';
+          // 刷新配额显示
+          const q2 = await DaoBox.quota('practice');
+          if (q2 && q2.ok) {
+            const el = document.getElementById('profile-quota');
+            if (el) el.innerHTML = `
+              <div class="stat"><b>${q2.remaining}</b><span>今日剩余</span></div>
+              <div class="stat"><b>${q2.limit}</b><span>每日上限</span></div>`;
+          }
+        } else {
+          checkinBtn.textContent = r && r.reason === '今日已打卡' ? '今日已打卡' : '打卡失败，明天再来';
+        }
+      } catch (e) {
+        checkinBtn.textContent = '打卡失败，请重试';
+        checkinBtn.disabled = false;
+      }
+    });
+  }
 }
 
 // ---------- 路由 ----------
@@ -549,8 +596,6 @@ function router() {
     renderPractice();
   } else if (hash === '#/profile') {
     renderProfile();
-  } else if (hash === '#/activate') {
-    renderActivatePlaceholder();
   } else {
     renderTeahouse();
   }
@@ -598,9 +643,6 @@ document.addEventListener('click', (e) => {
       break;
     case 'answer':
       handleAnswer(el.dataset.slot);
-      break;
-    case 'goto-activate':
-      goto('#/activate');
       break;
     case 'nav':
       goto(to || '#/home');
