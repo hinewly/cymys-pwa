@@ -245,7 +245,7 @@ async function handleAnswer(slot) {
       } catch (e) {
         if (e && e.quota) {
           DaoBox.showQuotaModal(e.data);
-          resultBox.innerHTML = '<div class="result wrong"><p class="result-text">今日新题额度已用完，注册登录享 3 倍，明天再来～</p></div>';
+          resultBox.innerHTML = '<div class="result wrong"><p class="result-text">今日免费时长已用完，注册登录每天 60 分钟，明天再来～</p></div>';
           page.querySelectorAll('.option-btn').forEach(b => { b.disabled = true; });
           return;
         }
@@ -555,7 +555,7 @@ async function renderProfile() {
       try {
         const r = await DaoBox.checkin();
         if (r && r.ok) {
-          checkinBtn.textContent = '✅ 已打卡 +2 次';
+          checkinBtn.textContent = '✅ 已打卡';
           // 刷新配额显示
           const q2 = await DaoBox.quota('practice');
           if (q2 && q2.ok) {
