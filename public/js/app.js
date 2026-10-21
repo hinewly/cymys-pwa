@@ -336,7 +336,7 @@ function renderTeahouse() {
           <p>${esc(term.meaning)}</p>
         </div>
       </div>
-      <p style="text-align:center;margin:16px 0 0;"><a href="https://daobox.app?src=cymys" style="color:inherit;text-decoration:none;border-bottom:1px solid currentColor;">← 返回 DaoBox 工具箱</a></p>
+      <p style="text-align:center;margin:16px 0 0;"><a href="${(window.DB_HOME || 'https://daobox.app')}?src=cymys" style="color:inherit;text-decoration:none;border-bottom:1px solid currentColor;">← 返回 DaoBox 工具箱</a></p>
       <p class="disclaimer">本站为麻将学习交流工具，仅供娱乐，不涉及任何博彩行为。理性游戏，未满18周岁不建议使用。</p>
     </div>`;
 }
@@ -528,7 +528,7 @@ async function renderProfile() {
       </div>
       ${user
         ? '<button class="btn-start" id="btn-checkin" style="margin-bottom:10px;">每日打卡 +2 次</button>'
-        : `<a class="btn-start" id="btn-login" href="${DaoBox ? esc(DaoBox.loginUrl()) : 'https://daobox.app/login'}" style="text-decoration:none;display:block;text-align:center;">注册 / 登录 → 额度 ×3</a>`}
+        : `<a class="btn-start" id="btn-login" href="${DaoBox ? esc(DaoBox.loginUrl()) : (window.DB_HOME || 'https://daobox.app') + '/login'}" style="text-decoration:none;display:block;text-align:center;">注册 / 登录 → 额度 ×3</a>`}
       <p class="disclaimer">本站为麻将学习交流工具，仅供娱乐，不涉及任何博彩行为。理性游戏，未满18周岁不建议使用。</p>
       <p class="version">${APP_VERSION}</p>
     </div>`;

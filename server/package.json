@@ -1,0 +1,5 @@
+{
+  "name": "cymys-pwa-server",
+  "private": true,
+  "type": "module"
+}

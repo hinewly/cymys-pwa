@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <script>
+    // 双域名适配：国内站 daobox.net.cn / 海外站 daobox.app，API 与门户按当前域名自动选择
+    window.DB_HOME = location.hostname.indexOf('daobox.net.cn') !== -1
+      ? 'https://daobox.net.cn' : 'https://daobox.app';
+    window.DB_API_HOME = window.DB_HOME.replace('://', '://api.');
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#1a6b3c">
@@ -11,7 +17,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>川渝麻研社 · 麻将拆搭练习</title>
   <link rel="stylesheet" href="style.css">
-<script src="https://daobox.app/portal.js" data-app="cymys" data-action="practice"></script>
+<script>document.write('<script src="' + window.DB_HOME + '/portal.js" data-app="cymys" data-action="practice"><\/script>');</script>
 </head>
 <body>
   <main id="view"></main>
