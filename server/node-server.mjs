@@ -4,7 +4,6 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import worker from "../worker/src/index.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -36,20 +35,6 @@ function serveStatic(pathname) {
   return { status: 200, body: fs.readFileSync(target), type: MIME[ext] || "application/octet-stream" };
 }
 
-function webRequestFromNode(req, bodyBuf) {
-  const proto = req.headers["x-forwarded-proto"] || "http";
-  const host = req.headers.host || "localhost";
-  const headers = new Headers();
-  for (const [k, v] of Object.entries(req.headers)) {
-    if (Array.isArray(v)) v.forEach((x) => headers.append(k, x));
-    else if (v != null) headers.append(k, v);
-  }
-  return new Request(`${proto}://${host}${req.url}`, {
-    method: req.method, headers,
-    body: ["GET", "HEAD"].includes(req.method) ? undefined : bodyBuf, duplex: "half",
-  });
-}
-
 const server = http.createServer(async (req, res) => {
   try {
     if (req.method === "GET" || req.method === "HEAD") {
@@ -60,10 +45,15 @@ const server = http.createServer(async (req, res) => {
         return;
       }
     }
-    const response = await worker.fetch(webRequestFromNode(req, Buffer.concat(await (async () => { const c = []; for await (const x of req) c.push(x); return c; })()), null), {}, { waitUntil: () => {} });
-    const buf = response.body ? Buffer.from(await response.arrayBuffer()) : null;
-    res.writeHead(response.status, Object.fromEntries([...response.headers]));
-    res.end(buf);
+    // 与 worker 行为一致：/api/* 返回 404 JSON，其余未匹配路径 404（cymys worker 无后端逻辑）
+    const pathname = new URL(req.url, "http://localhost").pathname;
+    if (pathname.startsWith("/api/")) {
+      res.writeHead(404, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({ ok: false, error: "API 未部署" }));
+      return;
+    }
+    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("Not found");
   } catch (err) {
     console.error("[cymys-pwa] request error:", err);
     if (!res.headersSent) res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
