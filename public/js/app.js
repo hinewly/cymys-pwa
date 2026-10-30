@@ -667,4 +667,12 @@ setTimeout(() => {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW 注册失败:', err));
 }
+// 切回前台时触发 SW 更新检查（覆盖长期不关闭的页面，方案A）
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState !== 'visible' || !('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.getRegistration().then(function (r) {
+    if (r) r.update().catch(function () {});
+  }).catch(function () {});
+});
+
 router();
