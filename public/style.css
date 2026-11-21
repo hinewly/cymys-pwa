@@ -192,10 +192,10 @@ body {
 @media (min-width: 768px) {
   .options { gap: 16px; }
   .option-btn { width: clamp(76px, 10vw, 104px); border-radius: 14px; }
-  body { display: flex; flex-direction: column; max-width: 760px; }
+  body { display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; }
   #view { flex: 1; width: 100%; }
   .tabbar {
-    position: relative; transform: none; width: 100%; max-width: none;
+    position: relative; left: auto; transform: none; width: 100%; max-width: none;
     order: -1; display: flex; align-items: center; justify-content: flex-start;
     padding: 0 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.22);
   }
@@ -225,7 +225,7 @@ body {
 
 /* iPad 横屏 / 桌面：再加宽，题型卡内部留白加大 */
 @media (min-width: 1024px) {
-  body { max-width: 900px; }
+  body { max-width: 900px; margin: 0 auto; }
   .tile-img { width: clamp(44px, 6vw, 64px); }
   .cards { grid-template-columns: 1fr 1fr; gap: 24px; }
   .question-card { padding: 24px; }
