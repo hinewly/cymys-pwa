@@ -175,6 +175,8 @@ body {
 .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 9px 0 7px; font-size: 11px; color: rgba(255,255,255,0.68); cursor: pointer;
   transition: color .15s; }
+button.tab { border: 0; background: transparent; font-family: inherit; }
+.tab-refresh:hover { color: #fff; }
 .tab svg { width: 22px; height: 22px; }
 .tab.active { color: #e8c98a; font-weight: 600; }
 .brand { display: none; }
@@ -209,6 +211,7 @@ body {
   }
   .tab.active { background: rgba(255,255,255,0.13); }
   .tab-extra { display: flex; }
+  .tab-refresh { display: flex; }
   .tab-profile { margin-left: auto; }
 
   .page { padding: 16px 20px; }

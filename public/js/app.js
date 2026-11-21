@@ -4,7 +4,7 @@
  * 业务规则与小程序版一致：每题型免费 15 题，答对记完成
  */
 
-const APP_VERSION = 'v0.6.5';
+const APP_VERSION = 'v0.6.6';
 const FREE_LIMIT = 15;
 const STORE_KEYS = {
   COMPLETED: 'cymys_completedQuestions',
@@ -667,6 +667,22 @@ setTimeout(() => {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW 注册失败:', err));
 }
+document.getElementById('global-refresh').addEventListener('click', async () => {
+  const btn = document.getElementById('global-refresh');
+  btn.disabled = true;
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch (e) {}
+  const url = location.pathname + '?_t=' + Date.now() + location.hash;
+  location.replace(url);
+});
 // 切回前台时触发 SW 更新检查（覆盖长期不关闭的页面，方案A）
 document.addEventListener('visibilitychange', function () {
   if (document.visibilityState !== 'visible' || !('serviceWorker' in navigator)) return;
