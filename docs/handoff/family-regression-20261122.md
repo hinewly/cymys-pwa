@@ -1,17 +1,17 @@
 # 川渝麻研社 robots 与 sitemap 缺失
 
-- last_updated: 2026-11-22 05:45
-- status: active
-- version: 线上当前版本
+- last_updated: 2026-11-23 12:05
+- status: done
+- version: v0.6.7 / SW v0.6.11
 
 ## 当前状态
 
-全家族回归确认首页 200、portal 胶囊和 SW 正常；`/robots.txt` 与 `/sitemap.xml` 均返回 404。
+2026-11-23 已补齐并部署国内站。`/robots.txt` 与 `/sitemap.xml` 线上均返回 200；sitemap 当前列出首页，项目暂无独立指南页。
 
 ## 待办
 
-- [ ] 补 robots.txt。
-- [ ] 补 sitemap.xml 并列出首页、指南页与主要入口。
+- [x] 补 robots.txt。
+- [x] 补 sitemap.xml 并列出公开入口。
 
 ## 相关文件
 
