@@ -47,7 +47,7 @@ jobs:
           echo "APP: ${CURRENT_APP} → ${NEW_APP}"
 
       - name: Sync changelog
-        run: cp CHANGELOG.md public/CHANGELOG.md
+        run: cp 更新日志.md public/更新日志.md
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
