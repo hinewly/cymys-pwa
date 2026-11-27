@@ -4,13 +4,15 @@
  * 业务规则与小程序版一致：每题型免费 15 题，答对记完成
  */
 
-const APP_VERSION = 'v0.6.8';
+const APP_VERSION = 'v0.6.9';
 const FREE_LIMIT = 15;
 const STORE_KEYS = {
   COMPLETED: 'cymys_completedQuestions',
   ACTIVATED: 'cymys_activation_status',
   DEVICE_ID: 'cymys_deviceId',
 };
+let completedCache = null;
+let completedSync = null;
 
 // ---------- 题库加载 ----------
 
@@ -33,12 +35,63 @@ function questionsByType(type) {
 // ---------- 本地存储 ----------
 
 function getCompleted() {
-  try { return JSON.parse(localStorage.getItem(STORE_KEYS.COMPLETED)) || []; }
-  catch { return []; }
+  if (completedCache) return completedCache.slice();
+  if (completedSync) {
+    const cloudLocal = completedSync.read();
+    if (cloudLocal && cloudLocal.progress && Array.isArray(cloudLocal.progress.completed)) {
+      completedCache = cloudLocal.progress.completed.slice();
+      return completedCache.slice();
+    }
+  }
+  try {
+    completedCache = JSON.parse(localStorage.getItem(STORE_KEYS.COMPLETED)) || [];
+    return completedCache.slice();
+  } catch { return []; }
 }
 
 function saveCompleted(list) {
-  localStorage.setItem(STORE_KEYS.COMPLETED, JSON.stringify(list));
+  completedCache = Array.from(new Set(list || []));
+  if (completedSync) completedSync.save(collectCymysState());
+  else {
+    try { localStorage.setItem(STORE_KEYS.COMPLETED, JSON.stringify(completedCache)); } catch (e) {}
+  }
+}
+
+function collectCymysState() {
+  return { progress: { completed: getCompleted() } };
+}
+
+function readLegacyCymysState() {
+  try {
+    const list = JSON.parse(localStorage.getItem(STORE_KEYS.COMPLETED));
+    return Array.isArray(list) && list.length ? { progress: { completed: list } } : null;
+  } catch (e) { return null; }
+}
+
+function mergeCymysState(local, remote) {
+  const merged = Array.from(new Set([
+    ...((local && local.progress && local.progress.completed) || []),
+    ...((remote && remote.progress && remote.progress.completed) || [])
+  ]));
+  return { progress: { completed: merged } };
+}
+
+function applyCymysState(d) {
+  completedCache = Array.from(new Set((d && d.progress && d.progress.completed) || []));
+  if (typeof router === 'function') router();
+}
+
+function initCymysSync() {
+  if (completedSync || !window.DaoBoxCloud) return;
+  completedSync = window.DaoBoxCloud.create({
+    app: 'cymys',
+    schemaVersion: 1,
+    readLegacy: readLegacyCymysState,
+    collect: collectCymysState,
+    apply: applyCymysState,
+    merge: mergeCymysState,
+    isEmpty: d => !d || !((d.progress && d.progress.completed) || []).length
+  });
 }
 
 function isCompleted(id) {
@@ -691,4 +744,10 @@ document.addEventListener('visibilitychange', function () {
   }).catch(function () {});
 });
 
+initCymysSync();
+if (completedSync) {
+  const initial = completedSync.read();
+  if (initial) applyCymysState(initial);
+}
 router();
+if (completedSync) completedSync.start();

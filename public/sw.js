@@ -2,7 +2,7 @@
  * Service Worker — cache-first 策略（与 vocab-pwa 同模式）
  * 改 public/ 下任何文件后必须递增 CACHE_VERSION
  */
-const CACHE_VERSION = 'v0.6.12';
+const CACHE_VERSION = 'v0.6.13';
 const CACHE_NAME = `cymys-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -10,7 +10,7 @@ const PRECACHE_URLS = [
   './index.html',
   './style.css',
   './manifest.json',
-  './js/app.js',
+  './js/app.js?v=0.6.9',
   './js/csvParser.js',
   './js/data/questions.csv.js',
   './js/data/paipu.js',
